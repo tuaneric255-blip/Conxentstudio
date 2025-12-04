@@ -65,8 +65,19 @@ export const PersonaPage: React.FC = () => {
         
         const result = await geminiService.generatePersona(productInfoString, selectedModels, language);
         setIsLoading(false);
-        if (result) {
-            addPersona({ ...result, productId: activeProduct.id, models: selectedModels });
+        if (result && result.summary) {
+            const newPersona: Omit<Persona, 'id' | 'createdAt'> = {
+                productId: activeProduct.id,
+                summary: result.summary,
+                models: selectedModels,
+                details: result.details,
+                empathyMap: result.empathyMap,
+                valueProposition: result.valueProposition,
+                jtbd: result.jtbd,
+                journey: result.journey,
+                mentalModel: result.mentalModel
+            };
+            addPersona(newPersona);
         } else {
             addToast({ type: 'error', message: t.toasts.failedToGenerate('persona') });
         }

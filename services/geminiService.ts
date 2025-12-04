@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Modality } from "@google/genai";
 import { 
   Language, 
@@ -18,6 +19,9 @@ import {
   OutlineSection,
 } from '../types';
 import { safeJsonParse } from '../utils';
+
+// Declare process to fix TS error in Vercel build
+declare const process: any;
 
 // Helper to normalize fields that should be string arrays but might be returned differently by the AI.
 const normalizeStringArray = (data: unknown): string[] => {
@@ -76,7 +80,7 @@ const flashModel = 'gemini-2.5-flash'; // For basic text tasks, summarization, e
 // Use the correct model name for image generation as per guidelines.
 const imageModel = 'gemini-2.5-flash-image';
 
-const callGemini = async (prompt: string, model: 'flash' | 'pro' = 'pro', useJson = true) => {
+const callGemini = async (prompt: string, model: 'flash' | 'pro' = 'pro', useJson = true): Promise<string | null> => {
     let selectedModel = model === 'pro' ? textModel : flashModel;
     const maxAttempts = 3;
 
@@ -100,7 +104,7 @@ const callGemini = async (prompt: string, model: 'flash' | 'pro' = 'pro', useJso
                 config: config,
             });
             // Access text directly from the response object.
-            return response.text;
+            return response.text || null;
         } catch (e: any) {
             console.error(`Gemini API call failed (Attempt ${attempt + 1}/${maxAttempts}):`, e);
             
@@ -559,12 +563,14 @@ const generateImages = async (prompts: string[]): Promise<ImageOption[] | null> 
                         responseModalities: [Modality.IMAGE],
                     },
                 });
-
-                for (const part of response.candidates[0].content.parts) {
-                    if (part.inlineData) {
-                        const base64ImageBytes: string = part.inlineData.data;
-                        const imageUrl = `data:image/png;base64,${base64ImageBytes}`;
-                        imageOptions.push({ id: '', url: imageUrl, prompt });
+                
+                if (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts) {
+                    for (const part of response.candidates[0].content.parts) {
+                        if (part.inlineData && part.inlineData.data) {
+                            const base64ImageBytes: string = part.inlineData.data;
+                            const imageUrl = `data:image/png;base64,${base64ImageBytes}`;
+                            imageOptions.push({ id: '', url: imageUrl, prompt });
+                        }
                     }
                 }
                 success = true;
@@ -734,7 +740,7 @@ const generateArticleSection = async (
     `;
 
     const response = await callGemini(prompt, 'pro', false);
-    return response;
+    return response || null;
 };
 
 interface EvaluateArticleSeoParams {
