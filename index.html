@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Content Workflow Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    
+    <!-- Polyfill process.env to prevent "process is not defined" crashes on Vercel/Browser -->
+    <script>
+      window.process = {
+        env: {
+          NODE_ENV: 'production',
+          API_KEY: '' // This prevents the crash, but you must ensure your build process injects the key or you handle it securely.
+        }
+      };
+    </script>
+
+    <style>
+      :root {
+        /* Light Theme Colors */
+        --color-bg: 220 50% 98%; /* zinc-50 */
+        --color-panel: 0 0% 100%; /* white */
+        --color-primary: 262 83% 58%;
+        --color-accent: 190 83% 58%;
+        --color-text: 222 47% 11%; /* zinc-900 */
+        --color-muted: 215 20% 45%; /* slate-600 */
+        --color-success: 142 71% 45%;
+        --color-warning: 38 96% 45%; /* Darker, more accessible yellow for better contrast */
+        --color-danger: 0 84% 60%;
+        --color-border: 217 33% 85%; /* slate-200 */
+      }
+      .dark {
+        /* Dark Theme Colors */
+        --color-bg: 222 47% 11%;
+        --color-panel: 222 47% 15%;
+        --color-primary: 262 83% 58%;
+        --color-accent: 190 83% 58%;
+        --color-text: 210 40% 98%;
+        --color-muted: 215 20% 65%;
+        --color-success: 142 71% 45%;
+        --color-warning: 48 96% 53%;
+        --color-danger: 0 84% 60%;
+        --color-border: 217 33% 21%;
+      }
+      
+      /* Mobile UX Fix: Force Tawk.to widget to sit above the Bottom Nav Bar (64px) */
+      @media (max-width: 768px) {
+          div[class*="tawk-min-container"] {
+              bottom: 80px !important;
+          }
+          iframe[title*="chat"] {
+              bottom: 80px !important;
+          }
+      }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bg: "hsl(var(--color-bg) / <alpha-value>)",
+                        panel: "hsl(var(--color-panel) / <alpha-value>)",
+                        primary: "hsl(var(--color-primary) / <alpha-value>)",
+                        accent: "hsl(var(--color-accent) / <alpha-value>)",
+                        text: "hsl(var(--color-text) / <alpha-value>)",
+                        muted: "hsl(var(--color-muted) / <alpha-value>)",
+                        success: "hsl(var(--color-success) / <alpha-value>)",
+                        warning: "hsl(var(--color-warning) / <alpha-value>)",
+                        danger: "hsl(var(--color-danger) / <alpha-value>)",
+                        border: "hsl(var(--color-border) / <alpha-value>)"
+                    },
+                    borderRadius: {
+                        sm: '8px',
+                        md: '12px',
+                        lg: '16px',
+                        xl: '24px',
+                    },
+                    boxShadow: {
+                        card: '0 10px 30px rgba(0,0,0,0.25)',
+                    },
+                    spacing: {
+                        xs: '8px',
+                        sm: '12px',
+                        md: '16px',
+                        lg: '24px',
+                        xl: '32px',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react/": "https://esm.sh/react@18.2.0/",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "@google/genai": "https://esm.sh/@google/genai",
+    "zustand": "https://esm.sh/zustand@4.5.2?deps=react@18.2.0",
+    "zustand/": "https://esm.sh/zustand@4.5.2/",
+    "react-markdown": "https://esm.sh/react-markdown@9.0.1?deps=react@18.2.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?deps=react@18.2.0,react-dom@18.2.0",
+    "immer": "https://esm.sh/immer@10.0.3",
+    "remark-gfm": "https://esm.sh/remark-gfm@4.0.0"
+  }
+}
+</script>
+</head>
+<body class="bg-bg text-text font-sans">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    // Attempt to configure mobile offset via API
+    if (window.innerWidth < 768) {
+        Tawk_API.customStyle = {
+            visibility : {
+                mobile : {
+                    yOffset : 80,
+                    xOffset : 15
+                }
+            }
+        };
+    }
+    (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/68fc66628fc9c3194fc4e12b/1j8cuvs6o';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);
+    })();
+    </script>
+    <!--End of Tawk.to Script-->
+</body>
+</html>
