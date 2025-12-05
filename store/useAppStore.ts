@@ -11,7 +11,8 @@ interface AppState {
   language: Language;
   theme: Theme;
   userName: string;
-  googleConfig: GoogleConfig;
+  geminiApiKey: string; // New: Distinct key for AI
+  googleConfig: GoogleConfig; // Existing: Key for Drive
   isTourOpen: boolean;
 
   // Actions
@@ -34,11 +35,12 @@ interface AppState {
   setLanguage: (language: Language) => void;
   setTheme: (theme: Theme) => void;
   setUserName: (name: string) => void;
+  setGeminiApiKey: (key: string) => void;
   setGoogleConfig: (config: GoogleConfig) => void;
   toggleTour: () => void;
 }
 
-const initialState: { data: AppData; activeIds: ActiveIds; googleConfig: GoogleConfig; isTourOpen: boolean } = {
+const initialState: { data: AppData; activeIds: ActiveIds; googleConfig: GoogleConfig; geminiApiKey: string; isTourOpen: boolean } = {
     data: {
         products: {},
         personas: {},
@@ -59,6 +61,7 @@ const initialState: { data: AppData; activeIds: ActiveIds; googleConfig: GoogleC
       ctaIds: [], // V2.2
       imageIds: [],
     },
+    geminiApiKey: '',
     googleConfig: {
         clientId: '',
         apiKey: ''
@@ -252,6 +255,8 @@ export const useAppStore = create<AppState>()(
       
       setUserName: (name) => set({ userName: name }),
       
+      setGeminiApiKey: (key) => set({ geminiApiKey: key }),
+
       setGoogleConfig: (config) => set({ googleConfig: config }),
       
       toggleTour: () => set(state => ({ isTourOpen: !state.isTourOpen })),
@@ -266,6 +271,7 @@ export const useAppStore = create<AppState>()(
           language: state.language, 
           theme: state.theme, 
           userName: state.userName,
+          geminiApiKey: state.geminiApiKey,
           googleConfig: state.googleConfig
       }),
     }

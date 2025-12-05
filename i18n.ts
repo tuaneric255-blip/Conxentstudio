@@ -38,6 +38,13 @@ const translations = {
         language: 'Language',
         yourName: 'Your Name',
         yourNamePlaceholder: 'For a personalized experience',
+        geminiSectionTitle: 'AI Configuration (Gemini)',
+        geminiApiKey: 'Gemini API Key',
+        geminiHelp: 'Required for content & image generation.',
+        driveSectionTitle: 'Export Configuration (Google Drive)',
+        driveHelp: 'Required to export articles to Google Docs.',
+        driveClientId: 'Google Drive Client ID',
+        driveApiKey: 'Google Drive API Key',
         driveGuideTitle: 'How to get Google Drive API Credentials',
         driveGuideSteps: [
             'Go to the Google Cloud Console (console.cloud.google.com).',
@@ -49,7 +56,7 @@ const translations = {
             'Select "Web application".',
             'Add your app URL (e.g., http://localhost:5173 or your production URL) to "Authorized JavaScript origins".',
             'Click "Create" and copy the "Client ID". Paste it above.',
-            'For the API Key: Click "Create Credentials" > "API Key". Copy and paste it above.'
+            'For the Drive API Key: Click "Create Credentials" > "API Key". Copy and paste it above.'
         ]
     },
     contextSelector: {
@@ -454,6 +461,13 @@ const translations = {
         language: 'Ngôn ngữ',
         yourName: 'Tên của bạn',
         yourNamePlaceholder: 'Để cá nhân hoá trải nghiệm',
+        geminiSectionTitle: 'Cấu hình AI (Gemini)',
+        geminiApiKey: 'Gemini API Key',
+        geminiHelp: 'Bắt buộc để tạo nội dung và hình ảnh.',
+        driveSectionTitle: 'Cấu hình Xuất bản (Google Drive)',
+        driveHelp: 'Bắt buộc để xuất bài viết sang Google Docs.',
+        driveClientId: 'Google Drive Client ID',
+        driveApiKey: 'Google Drive API Key',
         driveGuideTitle: 'Cách lấy thông tin xác thực Google Drive',
         driveGuideSteps: [
             'Truy cập Google Cloud Console (console.cloud.google.com).',

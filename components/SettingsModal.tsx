@@ -19,6 +19,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const userName = useAppStore(state => state.userName);
   const setUserName = useAppStore(state => state.setUserName);
   
+  const geminiApiKey = useAppStore(state => state.geminiApiKey);
+  const setGeminiApiKey = useAppStore(state => state.setGeminiApiKey);
+
   const googleConfig = useAppStore(state => state.googleConfig);
   const setGoogleConfig = useAppStore(state => state.setGoogleConfig);
 
@@ -53,10 +56,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     className={`text-sm font-bold p-2 rounded ${language === 'vi' ? 'bg-panel text-primary' : 'text-muted'}`}>VI</button>
             </div>
         </div>
-        
+
+        {/* AI Configuration Section */}
         <div className="pt-md border-t border-border">
-            <h4 className="text-text font-medium mb-sm">Google Drive Configuration</h4>
-            <p className="text-xs text-muted mb-md">Required to export articles to Google Docs. Data is stored locally.</p>
+            <h4 className="text-text font-medium mb-sm">{t.settingsModal.geminiSectionTitle}</h4>
+            <p className="text-xs text-muted mb-md">{t.settingsModal.geminiHelp}</p>
+            
+            <Input 
+                label={t.settingsModal.geminiApiKey}
+                id="gemini-api-key"
+                value={geminiApiKey}
+                onChange={(e) => setGeminiApiKey(e.target.value)}
+                placeholder="e.g., AIza..."
+            />
+            <p className="text-xs text-muted mt-2">
+                Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-primary underline">aistudio.google.com</a>
+            </p>
+        </div>
+        
+        {/* Drive Configuration Section */}
+        <div className="pt-md border-t border-border">
+            <h4 className="text-text font-medium mb-sm">{t.settingsModal.driveSectionTitle}</h4>
+            <p className="text-xs text-muted mb-md">{t.settingsModal.driveHelp}</p>
             
              <details className="mb-md p-md bg-bg rounded-md border border-border text-sm group">
                 <summary className="font-semibold cursor-pointer text-primary list-none flex items-center gap-2">
@@ -72,14 +93,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
             <div className="space-y-sm">
                 <Input 
-                    label="Google Client ID"
+                    label={t.settingsModal.driveClientId}
                     id="google-client-id"
                     value={googleConfig.clientId}
                     onChange={(e) => handleGoogleConfigChange('clientId', e.target.value)}
                     placeholder="e.g., 123...apps.googleusercontent.com"
                 />
                 <Input 
-                    label="Google API Key"
+                    label={t.settingsModal.driveApiKey}
                     id="google-api-key"
                     value={googleConfig.apiKey}
                     onChange={(e) => handleGoogleConfigChange('apiKey', e.target.value)}
@@ -91,7 +112,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         <div>
             <h4 className="text-text font-medium mb-2">System Info</h4>
              <p className="text-xs text-muted">
-                Gemini API key is managed via environment variables. All your work data is saved to your browser's local storage.
+                All your work data is saved to your browser's local storage.
             </p>
         </div>
       </div>

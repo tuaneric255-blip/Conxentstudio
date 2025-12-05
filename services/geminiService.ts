@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Modality } from "@google/genai";
 import { 
   Language, 
@@ -72,7 +73,8 @@ const normalizeBreakthroughs = (data: any) => {
 // Lazy initialization of GoogleGenAI with priority check
 const getAiClient = () => {
     // 1. Check if user has explicitly set an API Key in Settings (Best for Client-side apps)
-    const userSettingsApiKey = useAppStore.getState().googleConfig.apiKey;
+    // Use the specific geminiApiKey field, NOT the googleConfig which is for Drive
+    const userSettingsApiKey = useAppStore.getState().geminiApiKey;
     if (userSettingsApiKey && userSettingsApiKey.trim() !== '') {
         return new GoogleGenAI({ apiKey: userSettingsApiKey });
     }
