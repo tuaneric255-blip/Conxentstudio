@@ -1,5 +1,3 @@
-
-
 import { GoogleGenAI, Modality } from "@google/genai";
 import { 
   Language, 
@@ -70,9 +68,14 @@ const normalizeBreakthroughs = (data: any) => {
     };
 };
 
-
-// Initialize GoogleGenAI with a named parameter as per guidelines.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+// Lazy initialization of GoogleGenAI
+const getAiClient = () => {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+        throw new Error("API Key is missing. Please check your configuration.");
+    }
+    return new GoogleGenAI({ apiKey });
+};
 
 // Update to recommended models
 const textModel = 'gemini-3-pro-preview'; // For complex reasoning, coding, and text generation.
@@ -86,6 +89,7 @@ const callGemini = async (prompt: string, model: 'flash' | 'pro' = 'pro', useJso
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
+            const ai = getAiClient();
             const config: any = {};
             if (useJson) {
                 config.responseMimeType = 'application/json';
@@ -133,6 +137,7 @@ const callGeminiWithSearch = async (prompt: string) => {
     const maxAttempts = 3;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
+            const ai = getAiClient();
             // Use flashModel (gemini-2.5-flash) for search as it is robust for tools and faster.
             const response = await ai.models.generateContent({
                 model: flashModel, 
@@ -554,6 +559,7 @@ const generateImages = async (prompts: string[]): Promise<ImageOption[] | null> 
         const maxAttempts = 3;
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
             try {
+                const ai = getAiClient();
                 // Use ai.models.generateContent with the correct image model and response modality.
                 const response = await ai.models.generateContent({
                     model: imageModel,
