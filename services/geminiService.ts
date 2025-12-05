@@ -17,8 +17,9 @@ import {
   OutlineSection,
 } from '../types';
 import { safeJsonParse } from '../utils';
+import { useAppStore } from '../store/useAppStore'; // Import store to access user settings
 
-// Declare process to fix TS error in Vercel build
+// Declare process/import.meta for TS
 declare const process: any;
 
 // Helper to normalize fields that should be string arrays but might be returned differently by the AI.
@@ -68,13 +69,28 @@ const normalizeBreakthroughs = (data: any) => {
     };
 };
 
-// Lazy initialization of GoogleGenAI
+// Lazy initialization of GoogleGenAI with priority check
 const getAiClient = () => {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-        throw new Error("API Key is missing. Please check your configuration.");
+    // 1. Check if user has explicitly set an API Key in Settings (Best for Client-side apps)
+    const userSettingsApiKey = useAppStore.getState().googleConfig.apiKey;
+    if (userSettingsApiKey && userSettingsApiKey.trim() !== '') {
+        return new GoogleGenAI({ apiKey: userSettingsApiKey });
     }
-    return new GoogleGenAI({ apiKey });
+
+    // 2. Check Vite environment variable (Standard for Vercel)
+    // Cast import.meta to any to avoid TypeScript error 'Property env does not exist on type ImportMeta'
+    const viteEnvKey = (import.meta as any).env.VITE_API_KEY;
+    if (viteEnvKey) {
+        return new GoogleGenAI({ apiKey: viteEnvKey });
+    }
+
+    // 3. Fallback to process.env (Legacy/Build replacement)
+    const processEnvKey = process.env.API_KEY;
+    if (processEnvKey) {
+        return new GoogleGenAI({ apiKey: processEnvKey });
+    }
+
+    throw new Error("API Key is missing. Please enter your Google API Key in Settings or configure VITE_API_KEY in Vercel.");
 };
 
 // Update to recommended models
@@ -228,7 +244,7 @@ const generateKeywords = async (personaSummary: string, language: Language, loca
     - intent: 'Informational', 'Navigational', 'Commercial', or 'Transactional'.
     - lsiKeywords: A list of 3-5 related Latent Semantic Indexing keywords.
 
-    The final output MUST be a single JSON object with a "keywords" key containing an array of keyword objects. Example format:
+    The final output MUST be a single JSON object with an "keywords" key containing an array of keyword objects. Example format:
     {
       "keywords": [
         {

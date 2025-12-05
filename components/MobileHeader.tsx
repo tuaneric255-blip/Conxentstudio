@@ -20,7 +20,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({ onMenuClick }) => {
           <h1 className="text-lg font-bold text-text leading-tight">ConXent</h1>
           <div className="flex items-center gap-2">
             <p className="text-xs font-medium text-muted leading-tight">Basic 2 Magic</p>
-            <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-mono font-bold">v2.7</span>
+            <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-mono font-bold">v2.8</span>
           </div>
         </div>
       </div>
