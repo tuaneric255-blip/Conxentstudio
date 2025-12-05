@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { geminiService } from '../services/geminiService';
@@ -68,7 +66,7 @@ export const PersonaPage: React.FC = () => {
         if (result && result.summary) {
             const newPersona: Omit<Persona, 'id' | 'createdAt'> = {
                 productId: activeProduct.id,
-                summary: result.summary,
+                summary: result.summary!,
                 models: selectedModels,
                 details: result.details,
                 empathyMap: result.empathyMap,

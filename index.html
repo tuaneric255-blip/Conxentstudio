@@ -91,6 +91,14 @@
             },
         };
     </script>
+    <script>
+      // Polyfill process.env for client-side compatibility
+      window.process = {
+        env: {
+          NODE_ENV: 'production'
+        }
+      };
+    </script>
 <script type="importmap">
 {
   "imports": {
