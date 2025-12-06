@@ -578,13 +578,16 @@ const generateImages = async (prompts: string[]): Promise<ImageOption[] | null> 
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
             try {
                 const ai = getAiClient();
-                // Use ai.models.generateContent with the correct image model and response modality.
+                // Use ai.models.generateContent with the correct image model and config.
+                // Note: For gemini-2.5-flash-image to generate images, we use imageConfig.
+                // responseModalities is NOT supported for this specific model configuration in this context.
                 const response = await ai.models.generateContent({
                     model: imageModel,
                     contents: { parts: [{ text: prompt }] },
                     config: {
-                        // responseModalities must be an array with a single Modality.IMAGE element.
-                        responseModalities: [Modality.IMAGE],
+                         imageConfig: {
+                            aspectRatio: "16:9" // Wide format is generally better for articles
+                         }
                     },
                 });
                 
