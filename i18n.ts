@@ -24,6 +24,7 @@ const translations = {
       themeToggle: 'Toggle theme',
       settings: 'Settings',
       help: 'Guide',
+      supportGroup: 'Support Group',
       welcome: (name: string) => `Welcome, ${name}!`,
     },
     bottomNav: {
@@ -447,6 +448,7 @@ const translations = {
       themeToggle: 'Chuyển đổi giao diện',
       settings: 'Cài đặt',
       help: 'Hướng dẫn',
+      supportGroup: 'Group Hỗ trợ Zalo',
       welcome: (name: string) => `Chào mừng, ${name}!`,
     },
     bottomNav: {

@@ -11,9 +11,10 @@ interface AppState {
   language: Language;
   theme: Theme;
   userName: string;
-  geminiApiKey: string; // New: Distinct key for AI
-  googleConfig: GoogleConfig; // Existing: Key for Drive
+  geminiApiKey: string;
+  googleConfig: GoogleConfig;
   isTourOpen: boolean;
+  isSidebarCollapsed: boolean;
 
   // Actions
   addProduct: (product: Omit<ProductInfo, 'id' | 'createdAt'>) => void;
@@ -23,8 +24,8 @@ interface AppState {
   addObjectiveSet: (objectiveSet: Omit<ObjectiveSet, 'id' | 'createdAt'>) => void;
   addTitleSet: (titleSet: Omit<TitleSet, 'id' | 'createdAt'>) => void;
   addMetaDescriptionSet: (mds: Omit<MetaDescriptionSet, 'id' | 'createdAt'>) => void;
-  addSapoSet: (sapoSet: Omit<SapoSet, 'id' | 'createdAt'>) => void; // V2.0
-  addCtaSet: (ctaSet: Omit<CtaSet, 'id' | 'createdAt'>) => void; // V2.0
+  addSapoSet: (sapoSet: Omit<SapoSet, 'id' | 'createdAt'>) => void;
+  addCtaSet: (ctaSet: Omit<CtaSet, 'id' | 'createdAt'>) => void;
   addOutline: (outline: Omit<Outline, 'id' | 'createdAt'>) => void;
   addImageSet: (imageSet: Omit<ImageSet, 'id' | 'createdAt'>) => void;
   addArticle: (article: Omit<Article, 'id' | 'createdAt'>) => void;
@@ -38,9 +39,10 @@ interface AppState {
   setGeminiApiKey: (key: string) => void;
   setGoogleConfig: (config: GoogleConfig) => void;
   toggleTour: () => void;
+  toggleSidebar: () => void;
 }
 
-const initialState: { data: AppData; activeIds: ActiveIds; googleConfig: GoogleConfig; geminiApiKey: string; isTourOpen: boolean } = {
+const initialState: { data: AppData; activeIds: ActiveIds; googleConfig: GoogleConfig; geminiApiKey: string; isTourOpen: boolean; isSidebarCollapsed: boolean } = {
     data: {
         products: {},
         personas: {},
@@ -49,8 +51,8 @@ const initialState: { data: AppData; activeIds: ActiveIds; googleConfig: GoogleC
         objectiveSets: {},
         titleSets: {},
         metaDescriptionSets: {},
-        sapoSets: {}, // V2.0
-        ctaSets: {}, // V2.0
+        sapoSets: {},
+        ctaSets: {},
         outlines: {},
         imageSets: {},
         articles: {},
@@ -58,7 +60,7 @@ const initialState: { data: AppData; activeIds: ActiveIds; googleConfig: GoogleC
     activeIds: {
       keywordIds: [],
       objectiveIds: [],
-      ctaIds: [], // V2.2
+      ctaIds: [],
       imageIds: [],
     },
     geminiApiKey: '',
@@ -66,7 +68,8 @@ const initialState: { data: AppData; activeIds: ActiveIds; googleConfig: GoogleC
         clientId: '',
         apiKey: ''
     },
-    isTourOpen: false
+    isTourOpen: false,
+    isSidebarCollapsed: false
 };
 
 
@@ -102,7 +105,7 @@ export const useAppStore = create<AppState>()(
         const newSet = { ...keywordSet, id, createdAt: new Date().toISOString() };
         return {
             data: { ...state.data, keywordSets: { ...state.data.keywordSets, [id]: newSet } },
-            activeIds: { ...state.activeIds, keywordSetId: id, keywordIds: [] } // Clear selection on new set
+            activeIds: { ...state.activeIds, keywordSetId: id, keywordIds: [] }
         }
       }),
 
@@ -190,16 +193,10 @@ export const useAppStore = create<AppState>()(
       setActiveId: (key, value) => set(state => {
         const newActiveIds = { ...state.activeIds, [key]: value };
         
-        // Cascade resets
-        if (key === 'productId') {
-            newActiveIds.personaId = undefined;
-        }
+        if (key === 'productId') newActiveIds.personaId = undefined;
         if (key === 'productId' || key === 'personaId') {
             newActiveIds.keywordSetId = undefined;
             newActiveIds.keywordIds = [];
-        }
-        if (key === 'productId' || key === 'personaId' || key === 'keywordSetId') {
-             newActiveIds.keywordIds = [];
         }
         if (key === 'productId' || key === 'personaId' || key === 'keywordSetId' || key === 'keywordIds') {
             newActiveIds.analysisId = undefined;
@@ -216,7 +213,6 @@ export const useAppStore = create<AppState>()(
             newActiveIds.metaDescriptionSetId = undefined;
             newActiveIds.metaDescriptionId = undefined;
         }
-        // V2.0 Updates
         if (key === 'productId' || key === 'personaId' || key === 'keywordSetId' || key === 'keywordIds' || key === 'analysisId' || key === 'objectiveIds' || key === 'objectiveSetId' || key === 'titleId' || key === 'metaDescriptionId') {
             newActiveIds.sapoSetId = undefined;
             newActiveIds.sapoId = undefined;
@@ -261,6 +257,8 @@ export const useAppStore = create<AppState>()(
       
       toggleTour: () => set(state => ({ isTourOpen: !state.isTourOpen })),
 
+      toggleSidebar: () => set(state => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+
     }),
     {
       name: 'app-storage', 
@@ -272,7 +270,8 @@ export const useAppStore = create<AppState>()(
           theme: state.theme, 
           userName: state.userName,
           geminiApiKey: state.geminiApiKey,
-          googleConfig: state.googleConfig
+          googleConfig: state.googleConfig,
+          isSidebarCollapsed: state.isSidebarCollapsed
       }),
     }
   )

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { geminiService } from '../services/geminiService';
@@ -7,8 +8,9 @@ import { Card } from '../components/ui/Card';
 import { ContextSelector } from '../components/ContextSelector';
 import { EmptyState } from '../components/EmptyState';
 import { PersonaIcon } from '../components/icons/Icons';
-import { ProductInfo, Persona, PersonaModel, CustomerJourneyMapStage } from '../types';
+import { ProductInfo, Persona, PersonaModel } from '../types';
 import { useTranslations } from '../i18n';
+import { PageNavigation } from '../components/PageNavigation';
 
 export const PersonaPage: React.FC = () => {
     const t = useTranslations();
@@ -33,15 +35,11 @@ export const PersonaPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [selectedModels, setSelectedModels] = useState<PersonaModel[]>(['standard']);
 
-    const allModels: PersonaModel[] = ['standard', 'empathy', 'value-prop', 'jtbd', 'journey', 'mental'];
-
     const handleModelToggle = (model: PersonaModel) => {
         setSelectedModels(prev => {
             const newSelection = new Set(prev);
             if (newSelection.has(model)) {
-                if (newSelection.size > 1) {
-                    newSelection.delete(model);
-                }
+                if (newSelection.size > 1) newSelection.delete(model);
             } else {
                 newSelection.add(model);
             }
@@ -54,179 +52,42 @@ export const PersonaPage: React.FC = () => {
             addToast({ type: 'warning', message: t.toasts.selectProductFirst });
             return;
         }
-        if (selectedModels.length === 0) {
-            addToast({ type: 'warning', message: t.toasts.selectPersonaModel });
-            return;
-        }
         setIsLoading(true);
-        const productInfoString = `Name: ${activeProduct.name}\nPrice: ${activeProduct.price || 'N/A'}\nDesired Outcome: ${activeProduct.desiredOutcome || 'N/A'}`;
-        
+        const productInfoString = `Name: ${activeProduct.name}\nPrice: ${activeProduct.price || 'N/A'}\nDesired Outcome: ${activeProduct.desiredOutcome || 'N/A'}\nLocation: ${activeProduct.location || 'N/A'}`;
         const result = await geminiService.generatePersona(productInfoString, selectedModels, language);
         setIsLoading(false);
         if (result && result.summary) {
-            const newPersona: Omit<Persona, 'id' | 'createdAt'> = {
-                productId: activeProduct.id,
-                summary: result.summary!,
+            addPersona({
+                productId: activeProduct.id, 
+                summary: result.summary!, 
                 models: selectedModels,
-                details: result.details,
-                empathyMap: result.empathyMap,
+                details: result.details, 
+                empathyMap: result.empathyMap, 
                 valueProposition: result.valueProposition,
-                jtbd: result.jtbd,
-                journey: result.journey,
+                jtbd: result.jtbd, 
+                journey: result.journey, 
                 mentalModel: result.mentalModel
-            };
-            addPersona(newPersona);
+            });
+            addToast({ type: 'success', message: 'Persona generated!' });
         } else {
             addToast({ type: 'error', message: t.toasts.failedToGenerate('persona') });
         }
     };
 
-    const memoizedPersonaDetails = useMemo(() => {
-        if (!activePersona) return null;
+    const renderList = (title: string, items: string[] | undefined) => {
+        if (!items || !Array.isArray(items) || items.length === 0) return null;
         return (
-            <>
-                {activePersona.details && (
-                    <div className="mb-md pb-md border-b border-border last:border-b-0 last:mb-0 last:pb-0">
-                        <h5 className="font-bold text-base mb-sm text-accent">{t.persona.models.standard}</h5>
-                        <div className="space-y-md">
-                            <div>
-                                <h5 className="font-semibold text-text mb-xs">{t.persona.demographics}</h5>
-                                <p className="text-muted text-sm">{activePersona.details?.demographics}</p>
-                            </div>
-                            <div>
-                                <h5 className="font-semibold text-text mb-xs">{t.persona.goals}</h5>
-                                <ul className="list-disc list-inside text-muted text-sm space-y-xs">
-                                    {Array.isArray(activePersona.details?.goals) && activePersona.details.goals.map((goal, i) => <li key={i}>{goal}</li>)}
-                                </ul>
-                            </div>
-                            <div>
-                                <h5 className="font-semibold text-text mb-xs">{t.persona.challenges}</h5>
-                                <ul className="list-disc list-inside text-muted text-sm space-y-xs">
-                                    {Array.isArray(activePersona.details?.challenges) && activePersona.details.challenges.map((c, i) => <li key={i}>{c}</li>)}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {activePersona.empathyMap && (
-                     <div className="mb-md pb-md border-b border-border last:border-b-0 last:mb-0 last:pb-0">
-                        <h5 className="font-bold text-base mb-sm text-accent">{t.persona.models.empathy}</h5>
-                        <div className="space-y-md">
-                            {Object.entries(activePersona.empathyMap || {}).map(([key, value]) => (
-                                <div key={key}>
-                                    <h5 className="font-semibold text-text mb-xs capitalize">{t.persona.empathyMap[key as keyof typeof t.persona.empathyMap]}</h5>
-                                    <ul className="list-disc list-inside text-muted text-sm space-y-xs">
-                                        {Array.isArray(value) && value.map((item: string, i: number) => <li key={i}>{item}</li>)}
-                                    </ul>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-                {activePersona.valueProposition && (
-                     <div className="mb-md pb-md border-b border-border last:border-b-0 last:mb-0 last:pb-0">
-                        <h5 className="font-bold text-base mb-sm text-accent">{t.persona.models['value-prop']}</h5>
-                        <div className="space-y-md">
-                            {Object.entries(activePersona.valueProposition || {}).map(([key, value]) => (
-                                <div key={key}>
-                                    <h5 className="font-semibold text-text mb-xs capitalize">{t.persona.valueProp[key as keyof typeof t.persona.valueProp]}</h5>
-                                    <ul className="list-disc list-inside text-muted text-sm space-y-xs">
-                                        {Array.isArray(value) && value.map((item: string, i: number) => <li key={i}>{item}</li>)}
-                                    </ul>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-                {activePersona.jtbd && (
-                    <div className="mb-md pb-md border-b border-border last:border-b-0 last:mb-0 last:pb-0">
-                        <h5 className="font-bold text-base mb-sm text-accent">{t.persona.jtbd.title}</h5>
-                        <div className="space-y-md">
-                            <div>
-                                <h5 className="font-semibold text-text mb-xs">{t.persona.jtbd.jobStatement}</h5>
-                                <p className="text-muted text-sm italic">"{activePersona.jtbd.jobStatement}"</p>
-                            </div>
-                            <div>
-                                <h5 className="font-semibold text-text mb-xs">{t.persona.jtbd.functionalAspects}</h5>
-                                <ul className="list-disc list-inside text-muted text-sm space-y-xs">
-                                    {Array.isArray(activePersona.jtbd.functionalAspects) && activePersona.jtbd.functionalAspects.map((item, i) => <li key={i}>{item}</li>)}
-                                </ul>
-                            </div>
-                            <div>
-                                <h5 className="font-semibold text-text mb-xs">{t.persona.jtbd.emotionalAspects}</h5>
-                                <ul className="list-disc list-inside text-muted text-sm space-y-xs">
-                                    {Array.isArray(activePersona.jtbd.emotionalAspects) && activePersona.jtbd.emotionalAspects.map((item, i) => <li key={i}>{item}</li>)}
-                                </ul>
-                            </div>
-                            <div>
-                                <h5 className="font-semibold text-text mb-xs">{t.persona.jtbd.socialAspects}</h5>
-                                <ul className="list-disc list-inside text-muted text-sm space-y-xs">
-                                    {Array.isArray(activePersona.jtbd.socialAspects) && activePersona.jtbd.socialAspects.map((item, i) => <li key={i}>{item}</li>)}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {activePersona.journey && (
-                    <div className="mb-md pb-md border-b border-border last:border-b-0 last:mb-0 last:pb-0">
-                        <h5 className="font-bold text-base mb-sm text-accent">{t.persona.journey.title}</h5>
-                        <div className="space-y-md">
-                            {Object.entries(activePersona.journey || {}).map(([stage, details]: [string, CustomerJourneyMapStage]) => (
-                                <div key={stage}>
-                                    <h5 className="font-semibold text-text mb-sm capitalize">{t.persona.journey[stage as keyof typeof t.persona.journey]}</h5>
-                                    <div className="pl-sm border-l-2 border-border ml-sm space-y-sm">
-                                        <div>
-                                            <h6 className="font-medium text-text text-sm mb-xs">{t.persona.journey.actions}</h6>
-                                            <ul className="list-disc list-inside text-muted text-sm space-y-xs">
-                                                {Array.isArray(details?.actions) && details.actions.map((item: string, i: number) => <li key={i}>{item}</li>)}
-                                            </ul>
-                                        </div>
-                                        <div>
-                                            <h6 className="font-medium text-text text-sm mb-xs">{t.persona.journey.painPoints}</h6>
-                                             <ul className="list-disc list-inside text-muted text-sm space-y-xs">
-                                                {Array.isArray(details?.painPoints) && details.painPoints.map((item: string, i: number) => <li key={i}>{item}</li>)}
-                                            </ul>
-                                        </div>
-                                        <div>
-                                             <h6 className="font-medium text-text text-sm mb-xs">{t.persona.journey.opportunities}</h6>
-                                             <ul className="list-disc list-inside text-muted text-sm space-y-xs">
-                                                {Array.isArray(details?.opportunities) && details.opportunities.map((item: string, i: number) => <li key={i}>{item}</li>)}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-                {activePersona.mentalModel && (
-                    <div className="mb-md pb-md border-b border-border last:border-b-0 last:mb-0 last:pb-0">
-                        <h5 className="font-bold text-base mb-sm text-accent">{t.persona.mentalModel.title}</h5>
-                        <div className="space-y-md">
-                            <div>
-                                <h5 className="font-semibold text-text mb-xs">{t.persona.mentalModel.coreBeliefs}</h5>
-                                <ul className="list-disc list-inside text-muted text-sm space-y-xs">
-                                    {Array.isArray(activePersona.mentalModel.coreBeliefs) && activePersona.mentalModel.coreBeliefs.map((item, i) => <li key={i}>{item}</li>)}
-                                </ul>
-                            </div>
-                            <div>
-                                <h5 className="font-semibold text-text mb-xs">{t.persona.mentalModel.thoughtProcess}</h5>
-                                <p className="text-muted text-sm">{activePersona.mentalModel.thoughtProcess}</p>
-                            </div>
-                            <div>
-                                <h5 className="font-semibold text-text mb-xs">{t.persona.mentalModel.informationStructure}</h5>
-                                <p className="text-muted text-sm">{activePersona.mentalModel.informationStructure}</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </>
+            <div className="mb-4">
+                <p className="text-xs font-bold uppercase text-primary mb-1">{title}</p>
+                <ul className="list-disc list-inside space-y-1">
+                    {items.map((item, i) => <li key={i} className="text-sm text-text leading-snug">{item}</li>)}
+                </ul>
+            </div>
         );
-    }, [activePersona, t]);
-
+    };
 
     return (
-        <div>
+        <div className="max-w-6xl mx-auto">
             <Header title={t.persona.title} description={t.persona.description}>
                 <Button onClick={handleGenerate} isLoading={isLoading} disabled={!activeProduct}>
                     {t.persona.generateButton}
@@ -244,64 +105,199 @@ export const PersonaPage: React.FC = () => {
                 <div>
                     <label className="block text-sm font-medium text-muted mb-2">{t.persona.model}</label>
                     <div className="flex flex-wrap gap-2">
-                        {allModels.map(model => (
+                        {(['standard', 'empathy', 'value-prop', 'jtbd', 'journey', 'mental'] as PersonaModel[]).map(model => (
                             <Button
                                 key={model}
                                 variant={selectedModels.includes(model) ? 'primary' : 'secondary'}
                                 onClick={() => handleModelToggle(model)}
                                 size="sm"
+                                className="px-3"
                             >
                                 {t.persona.models[model]}
                             </Button>
                         ))}
                     </div>
-                    <p className="text-xs text-muted mt-2">{t.persona.modelHelper}</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
-                <div className="lg:col-span-2">
-                    <h3 className="text-lg font-semibold mb-md">{t.persona.generatedFor(activeProduct?.name || '...')}</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-lg">
+                <div className="lg:col-span-3 space-y-md">
                      {!activePersona && !isLoading && (
-                        <EmptyState
-                            Icon={PersonaIcon}
-                            title={t.persona.emptyTitle}
-                            message={t.persona.emptyMessage}
-                        />
+                        <EmptyState Icon={PersonaIcon} title={t.persona.emptyTitle} message={t.persona.emptyMessage} />
                     )}
-                    {isLoading && <p>{t.persona.generating}</p>}
-                    {activePersona && (
-                        <Card>
-                            <h4 className="font-bold text-lg mb-sm">{t.persona.summary}</h4>
-                            <p className="text-muted text-sm mb-md">{activePersona.summary}</p>
-                            
-                            <h4 className="font-bold text-lg mb-sm">{t.persona.details}</h4>
-                            {memoizedPersonaDetails}
+                    
+                    {isLoading && (
+                        <Card className="flex flex-col items-center justify-center p-xl">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                            <p className="text-center font-medium">{t.persona.generating}</p>
                         </Card>
                     )}
-                </div>
-                <div>
-                     <h3 className="text-lg font-semibold mb-md">{t.persona.historyTitle}</h3>
-                     {personasForProduct.length === 0 && <p className="text-sm text-muted">{t.persona.emptyHistory}</p>}
-                     <div className="space-y-sm max-h-[60vh] overflow-y-auto pr-sm">
-                        {personasForProduct.map((p: Persona) => (
-                             <Card 
-                                key={p.id}
-                                onClick={() => setActiveId('personaId', p.id)}
-                                className={`border-2 ${activeIds.personaId === p.id ? 'border-primary' : 'border-transparent'}`}
-                            >
-                                <div className="flex justify-between items-start">
-                                    <p className="font-semibold text-text truncate pr-2">{p.summary}</p>
-                                    <span className="text-xs bg-accent/20 text-accent font-bold py-1 px-2 rounded-full flex-shrink-0 text-center">
-                                        {p.models.map(m => t.persona.models[m]).join(' + ')}
-                                    </span>
-                                </div>
-                                <p className="text-xs text-muted mt-1">{new Date(p.createdAt).toLocaleString()}</p>
+                    
+                    {activePersona && !isLoading && (
+                        <div className="animate-fade-in space-y-md">
+                            <Card className="border-l-4 border-primary shadow-lg">
+                                <h4 className="font-bold text-xl mb-sm text-primary uppercase tracking-tight">{t.persona.summary}</h4>
+                                <p className="text-text leading-relaxed text-lg font-medium italic">"{activePersona.summary}"</p>
                             </Card>
-                        ))}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                                {activePersona.details && (
+                                    <Card className="h-full">
+                                        <h4 className="font-bold text-lg mb-4 border-b border-border pb-2 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-accent"></span>
+                                            {t.persona.models.standard}
+                                        </h4>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <p className="text-xs font-bold uppercase text-muted mb-1">{t.persona.demographics}</p>
+                                                <p className="text-sm bg-bg p-3 rounded-lg border border-border/50">{activePersona.details.demographics}</p>
+                                            </div>
+                                            {renderList(t.persona.goals, activePersona.details.goals)}
+                                            {renderList(t.persona.challenges, activePersona.details.challenges)}
+                                        </div>
+                                    </Card>
+                                )}
+
+                                {activePersona.empathyMap && (
+                                    <Card className="h-full">
+                                        <h4 className="font-bold text-lg mb-4 border-b border-border pb-2 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+                                            {t.persona.models.empathy}
+                                        </h4>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="bg-bg p-2 rounded-lg border border-border/30">{renderList(t.persona.empathyMap.says, activePersona.empathyMap.says)}</div>
+                                            <div className="bg-bg p-2 rounded-lg border border-border/30">{renderList(t.persona.empathyMap.thinks, activePersona.empathyMap.thinks)}</div>
+                                            <div className="bg-bg p-2 rounded-lg border border-border/30">{renderList(t.persona.empathyMap.does, activePersona.empathyMap.does)}</div>
+                                            <div className="bg-bg p-2 rounded-lg border border-border/30">{renderList(t.persona.empathyMap.feels, activePersona.empathyMap.feels)}</div>
+                                        </div>
+                                    </Card>
+                                )}
+
+                                {activePersona.valueProposition && (
+                                    <Card className="md:col-span-2">
+                                        <h4 className="font-bold text-lg mb-4 border-b border-border pb-2 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                                            {t.persona.models['value-prop']}
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div className="space-y-4">
+                                                <h5 className="font-bold text-xs uppercase text-center bg-primary/10 text-primary py-2 rounded-full tracking-widest">Customer Profile</h5>
+                                                {renderList(t.persona.valueProp.customerJobs, activePersona.valueProposition.customerJobs)}
+                                                {renderList(t.persona.valueProp.pains, activePersona.valueProposition.pains)}
+                                                {renderList(t.persona.valueProp.gains, activePersona.valueProposition.gains)}
+                                            </div>
+                                            <div className="space-y-4">
+                                                <h5 className="font-bold text-xs uppercase text-center bg-accent/10 text-accent py-2 rounded-full tracking-widest">Value Map</h5>
+                                                {renderList(t.persona.valueProp.productsServices, activePersona.valueProposition.productsServices)}
+                                                {renderList(t.persona.valueProp.painRelievers, activePersona.valueProposition.painRelievers)}
+                                                {renderList(t.persona.valueProp.gainCreators, activePersona.valueProposition.gainCreators)}
+                                            </div>
+                                        </div>
+                                    </Card>
+                                )}
+
+                                {activePersona.jtbd && (
+                                    <Card className="h-full">
+                                        <h4 className="font-bold text-lg mb-4 border-b border-border pb-2 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
+                                            {t.persona.jtbd.title}
+                                        </h4>
+                                        <div className="mb-4 bg-primary/5 p-4 rounded-xl border border-primary/20">
+                                            <p className="text-[10px] font-black uppercase text-primary/70 mb-1">{t.persona.jtbd.jobStatement}</p>
+                                            <p className="text-sm font-bold text-text">{activePersona.jtbd.jobStatement}</p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {renderList(t.persona.jtbd.functionalAspects, activePersona.jtbd.functionalAspects)}
+                                            {renderList(t.persona.jtbd.emotionalAspects, activePersona.jtbd.emotionalAspects)}
+                                            {renderList(t.persona.jtbd.socialAspects, activePersona.jtbd.socialAspects)}
+                                        </div>
+                                    </Card>
+                                )}
+
+                                {activePersona.mentalModel && (
+                                    <Card className="h-full">
+                                        <h4 className="font-bold text-lg mb-4 border-b border-border pb-2 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                                            {t.persona.mentalModel.title}
+                                        </h4>
+                                        <div className="space-y-4">
+                                            {renderList(t.persona.mentalModel.coreBeliefs, activePersona.mentalModel.coreBeliefs)}
+                                            <div className="p-3 bg-bg rounded-lg border border-border/50">
+                                                <p className="text-xs font-bold uppercase text-primary mb-1">{t.persona.mentalModel.thoughtProcess}</p>
+                                                <p className="text-sm text-text leading-relaxed">{activePersona.mentalModel.thoughtProcess}</p>
+                                            </div>
+                                            <div className="p-3 bg-bg rounded-lg border border-border/50">
+                                                <p className="text-xs font-bold uppercase text-primary mb-1">{t.persona.mentalModel.informationStructure}</p>
+                                                <p className="text-sm text-text leading-relaxed">{activePersona.mentalModel.informationStructure}</p>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                )}
+
+                                {activePersona.journey && (
+                                    <Card className="md:col-span-2 overflow-hidden">
+                                        <h4 className="font-bold text-lg mb-4 border-b border-border pb-2 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                                            {t.persona.journey.title}
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-border rounded-xl overflow-hidden">
+                                            {(['awareness', 'consideration', 'decision'] as const).map(stage => (
+                                                <div key={stage} className={`bg-bg/40 p-4 ${stage !== 'decision' ? 'md:border-r border-b md:border-b-0 border-border' : ''}`}>
+                                                    <h5 className="font-black text-xs text-center mb-4 text-primary uppercase bg-primary/10 py-1.5 rounded-md tracking-tighter">{t.persona.journey[stage]}</h5>
+                                                    <div className="space-y-4">
+                                                        {renderList(t.persona.journey.actions, activePersona.journey![stage]?.actions)}
+                                                        {renderList(t.persona.journey.painPoints, activePersona.journey![stage]?.painPoints)}
+                                                        {renderList(t.persona.journey.opportunities, activePersona.journey![stage]?.opportunities)}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </Card>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div>
+                     <h3 className="text-lg font-bold mb-md text-text uppercase flex items-center gap-2">
+                         <span className="w-1.5 h-6 bg-primary rounded-full"></span>
+                         {t.persona.historyTitle}
+                     </h3>
+                     <div className="space-y-sm max-h-[85vh] overflow-y-auto pr-sm custom-scrollbar pb-10">
+                        {personasForProduct.length === 0 ? (
+                            <p className="text-sm text-muted italic p-md bg-panel rounded-lg border border-dashed border-border">{t.persona.emptyHistory}</p>
+                        ) : (
+                            personasForProduct.map((p: Persona) => (
+                                <Card 
+                                   key={p.id}
+                                   onClick={() => setActiveId('personaId', p.id)}
+                                   className={`border-2 cursor-pointer transition-all hover:translate-x-1 ${activeIds.personaId === p.id ? 'border-primary bg-primary/5 shadow-md' : 'border-transparent opacity-80 hover:opacity-100'}`}
+                               >
+                                   <p className="font-bold text-text truncate text-sm leading-tight">{p.summary}</p>
+                                   <div className="flex items-center justify-between mt-2.5">
+                                       <div className="flex gap-1">
+                                           {p.models.map(m => {
+                                               const colors: Record<string, string> = {
+                                                   standard: 'bg-accent',
+                                                   empathy: 'bg-pink-500',
+                                                   'value-prop': 'bg-green-500',
+                                                   jtbd: 'bg-yellow-500',
+                                                   journey: 'bg-blue-500',
+                                                   mental: 'bg-purple-500'
+                                               };
+                                               return <span key={m} className={`w-2 h-2 rounded-full ${colors[m] || 'bg-muted'}`} title={m}></span>;
+                                           })}
+                                       </div>
+                                       <p className="text-[9px] text-muted font-mono font-bold">{new Date(p.createdAt).toLocaleDateString()}</p>
+                                   </div>
+                               </Card>
+                           ))
+                        )}
                      </div>
                 </div>
             </div>
+            <PageNavigation />
         </div>
     );
 };

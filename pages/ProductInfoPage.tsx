@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Header } from '../components/Header';
@@ -7,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ProductInfo } from '../types';
 import { useTranslations } from '../i18n';
+import { PageNavigation } from '../components/PageNavigation';
 
 export const ProductInfoPage: React.FC = () => {
   const t = useTranslations();
@@ -29,51 +31,48 @@ export const ProductInfoPage: React.FC = () => {
       return;
     }
     addProduct({ name, price, desiredOutcome, location });
-    setName('');
-    setPrice('');
-    setDesiredOutcome('');
-    setLocation('');
+    setName(''); setPrice(''); setDesiredOutcome(''); setLocation('');
   };
 
   return (
-    <div>
+    <div className="max-w-6xl mx-auto">
       <Header
         title={t.productInfo.title}
         description={t.productInfo.description}
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-lg">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg">
+        <Card className="h-fit">
           <h3 className="text-lg font-semibold mb-md">{t.productInfo.addNewProduct}</h3>
           <div className="space-y-md">
             <Input label={t.productInfo.productName} id="productName" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.productInfo.productNamePlaceholder} required />
             <Input label={t.productInfo.price} id="productPrice" value={price} onChange={(e) => setPrice(e.target.value)} placeholder={t.productInfo.pricePlaceholder} />
             <Input label={t.productInfo.targetLocation} id="targetLocation" value={location} onChange={(e) => setLocation(e.target.value)} placeholder={t.productInfo.targetLocationPlaceholder} />
             <Textarea label={t.productInfo.desiredOutcome} id="desiredOutcome" value={desiredOutcome} onChange={(e) => setDesiredOutcome(e.target.value)} placeholder={t.productInfo.desiredOutcomePlaceholder} />
-            <Button onClick={handleSave} disabled={!name.trim()}>{t.productInfo.saveButton}</Button>
+            <Button onClick={handleSave} disabled={!name.trim()} className="w-full">{t.productInfo.saveButton}</Button>
           </div>
         </Card>
         
         <div className="space-y-md">
           <h3 className="text-lg font-semibold">{t.productInfo.existingProducts}</h3>
           {products.length === 0 ? (
-            <p className="text-muted">{t.productInfo.emptyState}</p>
+            <p className="text-muted italic">{t.productInfo.emptyState}</p>
           ) : (
-            <div className="space-y-sm max-h-96 overflow-y-auto pr-sm">
+            <div className="space-y-sm max-h-[600px] overflow-y-auto pr-sm custom-scrollbar">
               {products.map((p) => (
                 <Card 
                     key={p.id} 
                     onClick={() => setActiveId('productId', p.id)}
-                    className={`border-2 ${activeIds.productId === p.id ? 'border-primary' : 'border-transparent'}`}
+                    className={`border-2 cursor-pointer transition-all ${activeIds.productId === p.id ? 'border-primary ring-1 ring-primary/20' : 'border-transparent'}`}
                 >
-                    <div className="flex items-start justify-between">
-                        <div>
+                    <div className="flex items-start justify-between gap-md">
+                        <div className="flex-1">
                             <div className="flex items-center gap-sm mb-1">
                                 <p className="font-semibold text-text">{p.name}</p>
-                                {p.location && <span className="text-xs bg-border/50 text-muted font-mono px-2 py-0.5 rounded-full">{p.location}</span>}
+                                {p.location && <span className="text-[10px] bg-border/50 text-muted font-mono px-2 py-0.5 rounded-full uppercase">{p.location}</span>}
                             </div>
-                            <p className="text-sm text-muted">{p.desiredOutcome || t.productInfo.noOutcome}</p>
+                            <p className="text-sm text-muted line-clamp-2">{p.desiredOutcome || t.productInfo.noOutcome}</p>
                         </div>
-                        {activeIds.productId === p.id && <span className="text-xs bg-primary/20 text-primary font-bold py-1 px-2 rounded-full">{t.active}</span>}
+                        {activeIds.productId === p.id && <span className="text-[10px] bg-primary/20 text-primary font-bold py-1 px-2 rounded-full whitespace-nowrap uppercase tracking-wider">{t.active}</span>}
                     </div>
                 </Card>
               ))}
@@ -81,6 +80,7 @@ export const ProductInfoPage: React.FC = () => {
           )}
         </div>
       </div>
+      <PageNavigation />
     </div>
   );
 };
