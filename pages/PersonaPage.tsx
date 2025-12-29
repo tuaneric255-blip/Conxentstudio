@@ -87,7 +87,7 @@ export const PersonaPage: React.FC = () => {
     };
 
     return (
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto pb-32">
             <Header title={t.persona.title} description={t.persona.description}>
                 <Button onClick={handleGenerate} isLoading={isLoading} disabled={!activeProduct}>
                     {t.persona.generateButton}
@@ -277,7 +277,7 @@ export const PersonaPage: React.FC = () => {
                                    <p className="font-bold text-text truncate text-sm leading-tight">{p.summary}</p>
                                    <div className="flex items-center justify-between mt-2.5">
                                        <div className="flex gap-1">
-                                           {p.models.map(m => {
+                                           {p.models?.map(m => {
                                                const colors: Record<string, string> = {
                                                    standard: 'bg-accent',
                                                    empathy: 'bg-pink-500',
