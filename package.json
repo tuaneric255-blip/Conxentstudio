@@ -1,7 +1,7 @@
 {
   "name": "basic-2-magic",
   "private": true,
-  "version": "2.9.0",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,7 @@
     "react-dom": "^18.2.0",
     "react-markdown": "^9.0.1",
     "react-router-dom": "^6.22.3",
+    "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.0",
     "zustand": "^4.5.2"
   },

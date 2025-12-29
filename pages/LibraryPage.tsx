@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { useAppStore } from '../store/useAppStore';
 import { Header } from '../components/Header';
 import { Card } from '../components/ui/Card';
@@ -165,6 +166,7 @@ export const LibraryPage: React.FC = () => {
                     <ReactMarkdown 
                         className="prose prose-lg max-w-none text-black"
                         remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
                         components={{
                             // Override default element rendering to ensure better styles for export & preview
                             h1: ({node, ...props}) => <h1 style={{fontSize: '2em', fontWeight: 'bold', marginTop: '1em', marginBottom: '0.5em', color: '#1a1a1a'}} {...props} />,

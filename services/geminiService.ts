@@ -81,7 +81,8 @@ const getAiClient = () => {
 
     // 2. Check Vite environment variable (Standard for Vercel)
     // Cast import.meta to any to avoid TypeScript error 'Property env does not exist on type ImportMeta'
-    const viteEnvKey = (import.meta as any).env.VITE_API_KEY;
+    // Use optional chaining to safely access env preventing crash if import.meta.env is undefined
+    const viteEnvKey = (import.meta as any)?.env?.VITE_API_KEY;
     if (viteEnvKey) {
         return new GoogleGenAI({ apiKey: viteEnvKey });
     }

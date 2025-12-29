@@ -123,18 +123,22 @@ export const WritePublishPage: React.FC = () => {
     { key: 'conversational', label: t.writePublish.styles.conversational },
   ];
 
-  // Helper to replace placeholders with actual Markdown images
-  // V2.3: Improved robustness - if placeholder missing, append to end.
+  // V3.0: Update Image Injection to use HTML tags for better compatibility and robustness
   const injectImages = (content: string, imageUrls: string[]) => {
       let result = content;
       imageUrls.forEach((url, index) => {
+          // Robust styling for the image. Double newlines ensure it breaks out of paragraphs in markdown.
+          const imageTag = `\n\n<img src="${url}" alt="Article Image ${index + 1}" style="width: 100%; max-width: 800px; height: auto; border-radius: 8px; margin: 20px 0; display: block;" />\n\n`;
+          
           // Regex to match [IMAGE_1], [IMAGE_2] etc. case insensitive
           const placeholderRegex = new RegExp(`\\[IMAGE_${index + 1}\\]`, 'gi');
+          
           if (placeholderRegex.test(result)) {
-              result = result.replace(placeholderRegex, `\n![Article image](${url})\n`);
+              result = result.replace(placeholderRegex, imageTag);
           } else {
-              // Fallback: Append if not found
-              result += `\n\n![Article image](${url})\n`;
+              // Fallback: Append if not found. This ensures images are NEVER lost.
+              // Find the best place to append (end of a paragraph near the middle or end)
+              result += `\n\n${imageTag}\n`;
           }
       });
       return result;
@@ -142,18 +146,19 @@ export const WritePublishPage: React.FC = () => {
   
   // Update final content when parts change or we enter publish mode
   useEffect(() => {
-      if (activeStep === 'publish' && !finalContent) {
+      // Always reconstruction when entering publish to ensure latest edits are captured
+      if (activeStep === 'publish') {
           // Merge parts and inject images
           const p1 = injectImages(part1Content, imageSplits.part1);
           const p2 = injectImages(part2Content, imageSplits.part2);
           const p3 = injectImages(part3Content, imageSplits.part3);
           
-          // Prepend Feature Image logic for final content so it gets copied
-          const featureImgMd = featureImage ? `![Feature Image](${featureImage.url})\n\n` : '';
+          // Prepend Feature Image logic using HTML tag
+          const featureImgHtml = featureImage ? `<img src="${featureImage.url}" alt="Feature Image" style="width: 100%; max-width: 800px; height: auto; border-radius: 8px; margin-bottom: 24px; display: block;" />\n\n` : '';
 
-          setFinalContent(`${featureImgMd}${p1}\n\n${p2}\n\n${p3}`);
+          setFinalContent(`${featureImgHtml}${p1}\n\n${p2}\n\n${p3}`);
       }
-  }, [activeStep, part1Content, part2Content, part3Content, imageSplits, finalContent, featureImage]);
+  }, [activeStep, part1Content, part2Content, part3Content, imageSplits, featureImage]);
 
 
   const generateSection = async (part: 'part1' | 'part2' | 'part3') => {
@@ -197,7 +202,7 @@ export const WritePublishPage: React.FC = () => {
           activePersona!,
           activeAnalysis!,
           language,
-          images,
+          images, // Passed for context in prompt, but we handle physical injection here
           {
             style: writingStyle,
             includeFaq: includeFaq,
@@ -266,6 +271,7 @@ export const WritePublishPage: React.FC = () => {
   };
   
   const handleCopyToClipboard = () => {
+    // Basic copy
     navigator.clipboard.writeText(finalContent);
     addToast({ type: 'success', message: t.library.copied });
   };
@@ -471,6 +477,7 @@ export const WritePublishPage: React.FC = () => {
                         <h2 className="text-2xl font-bold">{activeTitle?.title}</h2>
                         <Button size="sm" variant="secondary" onClick={handleCopyToClipboard}>{t.library.copyContent}</Button>
                     </div>
+                    {/* Display Raw Markdown with HTML tags for user transparency */}
                     <textarea 
                         className="w-full h-[70vh] bg-bg border border-border rounded-md p-md font-mono text-sm focus:ring-primary focus:border-primary"
                         value={finalContent}
